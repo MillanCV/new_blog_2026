@@ -1,17 +1,18 @@
 ---
+import { BASE_URL } from '../lib/base';
 import { getAllProjects } from '../data/projects';
 
 const projects = getAllProjects();
 const currentPath = Astro.url.pathname;
-const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+const baseUrl = BASE_URL || '/';
 ---
 
 <nav class="nav">
   <div class="container">
-    <a href={baseUrl + '/'} class="nav-logo">YOUR NAME</a>
+    <a href={baseUrl ? baseUrl + '/' : '/'} class="nav-logo">YOUR NAME</a>
 
     <div class="nav-links">
-      <a href={baseUrl + '/'} class="nav-link">Info</a>
+      <a href={baseUrl ? baseUrl + '/' : '/'} class="nav-link">Info</a>
 
       <div class="nav-group">
         <span class="nav-label">Personal</span>

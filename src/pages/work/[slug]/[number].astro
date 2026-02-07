@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Navigation from '../../../components/Navigation.astro';
+import { BASE_URL } from '../../../lib/base';
 import { getAllProjects, getProjectBySlug } from '../../../data/projects';
 
 export async function getStaticPaths() {
@@ -37,7 +38,7 @@ if (!image) {
 
 const prevNumber = imageIndex > 0 ? imageIndex : null;
 const nextNumber = imageIndex < project.images.length - 1 ? imageIndex + 2 : null;
-const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+const baseUrl = BASE_URL || '/';
 const imageSrc = baseUrl + (image.src.startsWith('/') ? image.src : '/' + image.src);
 ---
 
