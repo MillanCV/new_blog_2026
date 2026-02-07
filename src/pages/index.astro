@@ -1,0 +1,1049 @@
+---
+import '../styles/global.css';
+import { getAllProjects } from '../data/projects';
+import { getAllPosts } from '../data/posts';
+
+const projects = getAllProjects();
+const posts = getAllPosts();
+const allImages = projects.flatMap(project =>
+  project.images.map((img, index) => ({
+    ...img,
+    projectSlug: project.slug,
+    projectTitle: project.title,
+    imageIndex: index
+  }))
+);
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name - Photography Portfolio</title>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-content">
+        <h1 class="photographer-name">MILLAN CASTRO</h1>
+
+        <nav class="projects-nav">
+          <div class="nav-section">
+            <button type="button" class="nav-link" id="nav-posts">Posts</button>
+          </div>
+
+          <div class="nav-section">
+            <button class="nav-link nav-toggle" id="fotografia-toggle">
+              Fotografía
+            </button>
+            <div class="nav-submenu" id="fotografia-submenu">
+              {projects.map((project) => (
+                <button
+                  class="submenu-item"
+                  data-project={project.slug}
+                >
+                  {project.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <button type="button" class="nav-link" id="nav-about">About</button>
+          </div>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main content: one visible at a time, no layout jump -->
+    <main class="main-content">
+      <div class="content-inner">
+        <div class="welcome-message content-pane" id="welcome">
+          <h2>Bienvenido</h2>
+          <p>Selecciona Posts, Fotografía o About en el menú lateral.</p>
+        </div>
+
+        <div class="content-pane blog-pane" id="blog-list" style="display: none;">
+          <ul class="post-list" id="post-list">
+            <!-- Filled by JavaScript -->
+          </ul>
+        </div>
+
+        <div class="content-pane blog-pane" id="blog-post" style="display: none;">
+          <div id="blog-post-inner" class="article-body"><!-- Filled by JavaScript --></div>
+        </div>
+
+        <div class="content-pane about-pane" id="about-content" style="display: none;">
+          <p class="about-bio">
+            Software Engineer focused on Python backend development. Stack: Django, FastAPI, PostgreSQL, MongoDB, AWS, Docker. Interested in REST APIs, distributed systems and AI. 14+ years of experience. Based in A Coruña, Spain.
+          </p>
+          <p class="about-meta">
+            <a href="https://www.linkedin.com/in/millan-castro-a527bb29/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          </p>
+        </div>
+
+        <div class="projects-grid content-pane" id="projects-grid" style="display: none;">
+          <!-- Projects will be inserted here by JavaScript -->
+        </div>
+
+        <div class="photo-grid content-pane" id="photo-grid" style="display: none;">
+          <!-- Photos will be inserted here by JavaScript -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Image viewer -->
+    <div class="image-viewer" id="image-viewer" style="display: none;">
+      <div class="viewer-container" id="viewer-container">
+        <img id="viewer-image" src="" alt="" />
+        <div id="viewer-text" class="viewer-text-content" style="display: none;">
+          <!-- Text content -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ projects, allImages, posts }}>
+    let currentProject = null;
+    let currentImageIndex = 0;
+    let currentProjectImages = [];
+    let isShowingAbout = false;
+
+    const contentIds = ['welcome', 'blog-list', 'blog-post', 'about-content', 'projects-grid', 'photo-grid'];
+
+    function hideAllContent() {
+      contentIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+
+    function showContent(id) {
+      hideAllContent();
+      const el = document.getElementById(id);
+      if (el) el.style.display = el.id === 'photo-grid' || el.id === 'projects-grid' ? 'grid' : 'block';
+      // Menu active state: bold "Posts" when on list or article
+      const navPosts = document.getElementById('nav-posts');
+      const navAbout = document.getElementById('nav-about');
+      if (navPosts) navPosts.classList.toggle('active', id === 'blog-list' || id === 'blog-post');
+      if (navAbout) navAbout.classList.toggle('active', id === 'about-content');
+    }
+
+    // Posts: show list
+    document.getElementById('nav-posts').addEventListener('click', () => {
+      document.getElementById('image-viewer').style.display = 'none';
+      document.getElementById('fotografia-submenu').classList.remove('open');
+      document.getElementById('fotografia-toggle').classList.remove('active');
+      showContent('blog-list');
+      renderBlogList();
+    });
+
+    function renderBlogList() {
+      const list = document.getElementById('post-list');
+      list.innerHTML = '';
+      posts.forEach((post) => {
+        const li = document.createElement('li');
+        li.className = 'post-item';
+        const a = document.createElement('button');
+        a.type = 'button';
+        a.className = 'post-link';
+        a.innerHTML = `<span class="post-date">${post.date}:</span> <span class="post-title">${post.title}</span>`;
+        a.addEventListener('click', () => showPost(post.slug));
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+    }
+
+    function showPost(slug) {
+      const post = posts.find((p) => p.slug === slug);
+      if (!post) return;
+      const inner = document.getElementById('blog-post-inner');
+      inner.innerHTML = `<p class="post-meta">${post.date}</p><h3 class="post-heading">${post.title}</h3><hr class="blog-hr" /><div class="post-body">${post.content}</div>`;
+      showContent('blog-post');
+    }
+
+    // About
+    document.getElementById('nav-about').addEventListener('click', () => {
+      document.getElementById('image-viewer').style.display = 'none';
+      document.getElementById('fotografia-submenu').classList.remove('open');
+      document.getElementById('fotografia-toggle').classList.remove('active');
+      showContent('about-content');
+    });
+
+    // Toggle Fotografía menu
+    document.getElementById('fotografia-toggle').addEventListener('click', () => {
+      const submenu = document.getElementById('fotografia-submenu');
+      const toggleButton = document.getElementById('fotografia-toggle');
+      const isOpen = submenu.classList.contains('open');
+
+      if (!isOpen) {
+        submenu.classList.add('open');
+        toggleButton.classList.add('active');
+        showContent('projects-grid');
+        showProjectsGrid();
+      } else {
+        submenu.classList.remove('open');
+        toggleButton.classList.remove('active');
+        showContent('welcome');
+      }
+    });
+
+    // Show projects grid
+    function showProjectsGrid() {
+      const projectsGrid = document.getElementById('projects-grid');
+      projectsGrid.innerHTML = '';
+
+      projects.forEach((project) => {
+        if (project.images && project.images.length > 0) {
+          const projectCard = document.createElement('div');
+          projectCard.className = 'project-card';
+          projectCard.innerHTML = `
+            <img src="${project.images[0].src}" alt="${project.title}" />
+            <div class="project-title">${project.title}</div>
+          `;
+          projectCard.addEventListener('click', () => {
+            showProject(project.slug);
+          });
+          projectsGrid.appendChild(projectCard);
+        }
+      });
+    }
+
+    // Show project photos
+    function showProject(projectSlug) {
+      currentProject = projectSlug;
+      const project = projects.find(p => p.slug === projectSlug);
+
+      if (!project) return;
+
+      showContent('photo-grid');
+      const grid = document.getElementById('photo-grid');
+
+      // Clear and populate grid
+      grid.innerHTML = '';
+      currentProjectImages = project.images;
+
+      // Add "About this project" card first
+      const aboutCard = document.createElement('div');
+      aboutCard.className = 'about-card';
+      aboutCard.innerHTML = '<h3>About This Project</h3>';
+      aboutCard.addEventListener('click', () => openAboutViewer(project));
+      grid.appendChild(aboutCard);
+
+      // Then add all photos
+      project.images.forEach((image, index) => {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+        photoItem.innerHTML = `<img src="${image.src}" alt="${image.alt}" loading="lazy" />`;
+        photoItem.addEventListener('click', () => openViewer(index));
+        grid.appendChild(photoItem);
+      });
+
+      // Update active state
+      document.querySelectorAll('.submenu-item').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-project="${projectSlug}"]`).classList.add('active');
+    }
+
+    // Add click listeners to submenu items
+    document.querySelectorAll('.submenu-item').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const projectSlug = e.target.dataset.project;
+        showProject(projectSlug);
+      });
+    });
+
+    // Open image viewer
+    function openViewer(index) {
+      currentImageIndex = index;
+      isShowingAbout = false;
+      const viewer = document.getElementById('image-viewer');
+      const img = document.getElementById('viewer-image');
+      const textDiv = document.getElementById('viewer-text');
+      const grid = document.getElementById('photo-grid');
+
+      img.style.display = 'block';
+      textDiv.style.display = 'none';
+      img.src = currentProjectImages[index].src;
+      img.alt = currentProjectImages[index].alt;
+
+      viewer.style.display = 'flex';
+      grid.style.display = 'none';
+    }
+
+    // Open about viewer
+    function openAboutViewer(project) {
+      isShowingAbout = true;
+      const viewer = document.getElementById('image-viewer');
+      const img = document.getElementById('viewer-image');
+      const textDiv = document.getElementById('viewer-text');
+      const grid = document.getElementById('photo-grid');
+
+      img.style.display = 'none';
+      textDiv.style.display = 'block';
+      textDiv.innerHTML = `
+        <h2>${project.title}</h2>
+        <p><strong>Category:</strong> ${project.category}</p>
+        <p>${project.description}</p>
+      `;
+
+      viewer.style.display = 'flex';
+      grid.style.display = 'none';
+    }
+
+    // Close viewer
+    function closeViewer() {
+      const viewer = document.getElementById('image-viewer');
+      const grid = document.getElementById('photo-grid');
+
+      viewer.style.display = 'none';
+      grid.style.display = 'grid';
+      isShowingAbout = false;
+    }
+
+    // Navigate viewer
+    function navigateViewer(direction) {
+      const viewer = document.getElementById('image-viewer');
+      const img = document.getElementById('viewer-image');
+      const textDiv = document.getElementById('viewer-text');
+
+      if (direction === 'next') {
+        if (isShowingAbout) {
+          // From about to first photo
+          isShowingAbout = false;
+          currentImageIndex = 0;
+          img.style.display = 'block';
+          textDiv.style.display = 'none';
+          img.src = currentProjectImages[0].src;
+          img.alt = currentProjectImages[0].alt;
+        } else if (currentImageIndex < currentProjectImages.length - 1) {
+          // Next photo
+          currentImageIndex++;
+          img.src = currentProjectImages[currentImageIndex].src;
+          img.alt = currentProjectImages[currentImageIndex].alt;
+        }
+      } else if (direction === 'prev') {
+        if (isShowingAbout) {
+          // Can't go before about
+          return;
+        } else if (currentImageIndex > 0) {
+          // Previous photo
+          currentImageIndex--;
+          img.src = currentProjectImages[currentImageIndex].src;
+          img.alt = currentProjectImages[currentImageIndex].alt;
+        } else if (currentImageIndex === 0) {
+          // From first photo back to about
+          isShowingAbout = true;
+          const project = projects.find(p => p.slug === currentProject);
+          img.style.display = 'none';
+          textDiv.style.display = 'block';
+          textDiv.innerHTML = `
+            <h2>${project.title}</h2>
+            <p><strong>Category:</strong> ${project.category}</p>
+            <p>${project.description}</p>
+          `;
+        }
+      }
+    }
+
+    // Handle viewer container click
+    const viewerContainer = document.getElementById('viewer-container');
+
+    viewerContainer.addEventListener('mousemove', (e) => {
+      const rect = viewerContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const width = rect.width;
+      const third = width / 3;
+
+      viewerContainer.classList.remove('cursor-left', 'cursor-center', 'cursor-right');
+
+      // Check if we can navigate left
+      const canGoLeft = !isShowingAbout && currentImageIndex >= 0;
+      // Check if we can navigate right
+      const canGoRight = (isShowingAbout) || (currentImageIndex < currentProjectImages.length - 1);
+
+      if (x < third && canGoLeft) {
+        viewerContainer.classList.add('cursor-left');
+      } else if (x > width - third && canGoRight) {
+        viewerContainer.classList.add('cursor-right');
+      } else {
+        viewerContainer.classList.add('cursor-center');
+      }
+    });
+
+    viewerContainer.addEventListener('click', (e) => {
+      const rect = viewerContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const width = rect.width;
+      const third = width / 3;
+
+      if (x < third) {
+        // Left third - previous
+        navigateViewer('prev');
+      } else if (x > width - third) {
+        // Right third - next
+        navigateViewer('next');
+      } else {
+        // Center third - back to grid
+        closeViewer();
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      const viewer = document.getElementById('image-viewer');
+      if (viewer.style.display !== 'flex') return;
+
+      if (e.key === 'Escape') closeViewer();
+      if (e.key === 'ArrowLeft') navigateViewer('prev');
+      if (e.key === 'ArrowRight') navigateViewer('next');
+    });
+  </script>
+
+  <style is:global>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: #ffffff;
+      border-right: none;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-content {
+      padding: 2rem 1.5rem 2rem 2.25rem;
+    }
+
+    .photographer-name {
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-top: -0.5rem;
+      margin-bottom: 3rem;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .projects-nav {
+      margin-bottom: 2rem;
+    }
+
+    .nav-section {
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-link {
+      width: 100%;
+      text-align: left;
+      padding: 0.35rem 0;
+      background: none;
+      border: none;
+      font-size: 1.125rem;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s;
+      font-family: inherit;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-link:hover {
+      color: #000;
+    }
+
+    .nav-link.active {
+      font-weight: 700;
+    }
+
+    .nav-toggle {
+      position: relative;
+    }
+
+    .nav-toggle.active {
+      color: #000;
+    }
+
+    .nav-submenu {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      padding-left: 1rem;
+      margin-top: 0;
+      padding-top: 0;
+      margin-bottom: 0;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+                  padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  margin-top 0.3s ease,
+                  margin-bottom 0.3s ease;
+    }
+
+    .nav-submenu.open {
+      max-height: 500px;
+      opacity: 1;
+      margin-top: 0.25rem;
+      padding-top: 0.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .submenu-item {
+      width: 100%;
+      text-align: left;
+      padding: 0.35rem 0;
+      background: none;
+      border: none;
+      font-size: 1.05rem;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      font-family: inherit;
+      display: block;
+    }
+
+    .submenu-item:hover {
+      color: #000;
+    }
+
+    .submenu-item.active {
+      color: #000;
+      font-weight: 500;
+    }
+
+    /* Main content: fixed size, inner scrolls = no layout jump */
+    .main-content {
+      margin-left: 280px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .content-inner {
+      flex: 1;
+      overflow: auto;
+      padding: 3rem;
+    }
+
+    .content-pane {
+      max-width: 720px;
+      /* Center on whole page: viewport center 50vw, pane width 720px → left at 50vw - 360px; main-content starts at 280px so from its left: 50vw - 280px - 360px */
+      margin-left: max(0px, calc(50vw - 280px - 360px));
+      margin-right: auto;
+    }
+
+    /* Blog list, article, about: align left + top of first line level with top of "Posts" in sidebar */
+    #blog-list.content-pane,
+    #blog-post.content-pane,
+    #about-content.content-pane {
+      margin-left: 0;
+      margin-right: auto;
+      margin-top: 2rem;
+    }
+
+    /* Grids use full content width so images stay large */
+    #projects-grid.content-pane,
+    #photo-grid.content-pane {
+      max-width: none;
+      width: 100%;
+      margin-left: 0;
+      margin-right: 0;
+      margin-top: 2rem;
+    }
+
+    .content-heading {
+      font-size: 1rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    /* Blog: Fabien Sanglard–style typography */
+    .blog-pane {
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .blog-intro {
+      font-size: 1rem;
+      color: #333;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .blog-hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 1rem 0;
+    }
+
+    /* Post list: scannable, editorial typography */
+    .post-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 1.125rem;
+      line-height: 1.7;
+      letter-spacing: 0.01em;
+    }
+
+    .post-item {
+      margin-bottom: 0.5rem;
+    }
+
+    .post-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .post-link {
+      width: 100%;
+      text-align: left;
+      padding: 0.25rem 0;
+      background: none;
+      border: none;
+      font-size: inherit;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline;
+      line-height: inherit;
+      letter-spacing: inherit;
+      transition: color 0.15s ease;
+    }
+
+    .post-link:hover {
+      color: #000;
+      text-decoration: none;
+    }
+
+    .post-date {
+      color: #666;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      margin-right: 0.35em;
+    }
+
+    .post-title {
+      font-weight: 500;
+    }
+
+    /* Blog post (article page style) */
+    .back-link {
+      background: none;
+      border: none;
+      padding: 0;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #666;
+      cursor: pointer;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .back-link:hover {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    .article-body .post-meta {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .article-body .post-heading {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 1.5rem 0;
+      line-height: 1.3;
+    }
+
+    .article-body .post-body {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #333;
+    }
+
+    .article-body .post-body :global(p) {
+      margin-bottom: 1rem;
+    }
+
+    .article-body .post-body :global(h2),
+    .article-body .post-body :global(h3) {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 2rem 0 0.75rem 0;
+      line-height: 1.3;
+    }
+
+    .article-body .post-body :global(h2:first-child),
+    .article-body .post-body :global(h3:first-child) {
+      margin-top: 1.5rem;
+    }
+
+    .article-body .post-body :global(code) {
+      font-size: 0.9em;
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: #f5f5f5;
+      padding: 0.15em 0.4em;
+      border-radius: 2px;
+    }
+
+    .article-body .post-body :global(blockquote) {
+      margin: 1.5rem 0;
+      padding-left: 1rem;
+      border-left: 3px solid #ccc;
+      color: #555;
+      font-style: italic;
+    }
+
+    .article-body .post-body :global(ul),
+    .article-body .post-body :global(ol) {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .article-body .post-body :global(li) {
+      margin-bottom: 0.35rem;
+    }
+
+    .article-body .post-body :global(a) {
+      color: #333;
+      text-decoration: underline;
+    }
+
+    .article-body .post-body :global(figure.article-figure) {
+      margin: 2rem 0;
+    }
+
+    .article-body .post-body :global(figure.article-figure img) {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .article-body .post-body :global(figure.article-figure figcaption) {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    .welcome-message {
+      margin-left: 0;
+      margin-right: auto;
+      margin-top: 2rem;
+      padding: 0;
+    }
+
+    .welcome-message h2 {
+      font-size: 1rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 0.5rem 0;
+      color: #999;
+    }
+
+    .welcome-message p {
+      font-size: 1rem;
+      color: #666;
+      margin: 0;
+      line-height: 1.6;
+      max-width: 36ch;
+    }
+
+    /* About: editorial caption-style (Dina Litovsky–style info/caption) */
+    .about-pane {
+      max-width: 32em;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .about-bio {
+      font-size: 1rem;
+      line-height: 1.75;
+      font-weight: 400;
+      color: #2a2a2a;
+      margin: 0 0 1.5rem 0;
+      letter-spacing: 0.01em;
+    }
+
+    .about-meta {
+      font-size: 0.8125rem;
+      margin: 0;
+      color: #666;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .about-meta a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
+    }
+
+    .about-meta a:hover {
+      border-bottom-color: transparent;
+    }
+
+    /* Projects Grid: narrower, centered in content area */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.25rem;
+      padding: 2rem 0;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .project-card {
+      position: relative;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      cursor: pointer;
+      background: #f0f0f0;
+    }
+
+    .project-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .project-title {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+      color: #ffffff;
+      font-size: 1.125rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-align: left;
+    }
+
+    /* Photo grid */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.35rem;
+    }
+
+    .photo-item {
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      cursor: pointer;
+      background: #f0f0f0;
+      position: relative;
+    }
+
+    .photo-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.3s ease;
+      pointer-events: none;
+    }
+
+    .photo-item:hover::after {
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .about-card {
+      aspect-ratio: 4/3;
+      background: #f5f5f5;
+      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .about-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.3s ease;
+      pointer-events: none;
+    }
+
+    .about-card:hover::after {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .about-card h3 {
+      font-size: 0.9rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Image Viewer */
+    .image-viewer {
+      position: fixed;
+      top: 0;
+      left: 280px;
+      right: 0;
+      bottom: 0;
+      background: #ffffff;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .viewer-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .viewer-container img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .viewer-text-content {
+      max-width: 800px;
+      padding: 3rem;
+    }
+
+    .viewer-text-content h2 {
+      font-size: 1.8rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .viewer-text-content p {
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+      color: #666;
+    }
+
+    /* Cursor zones */
+    .viewer-container.cursor-left {
+      cursor: w-resize;
+    }
+
+    .viewer-container.cursor-center {
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>') 12 12, pointer;
+    }
+
+    .viewer-container.cursor-right {
+      cursor: e-resize;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 2rem 1rem;
+      }
+
+      /* Center 720px pane on full page when sidebar is on top (about, welcome) */
+      .content-pane {
+        margin-left: max(0px, calc(50vw - 360px));
+      }
+
+      #blog-list.content-pane,
+      #blog-post.content-pane,
+      #about-content.content-pane,
+      #projects-grid.content-pane,
+      #photo-grid.content-pane {
+        margin-left: 0;
+        margin-top: 2rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+        max-width: 280px;
+      }
+
+      .photo-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.35rem;
+      }
+
+      .lightbox-prev,
+      .lightbox-next {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+      }
+
+      .lightbox-prev {
+        left: 1rem;
+      }
+
+      .lightbox-next {
+        right: 1rem;
+      }
+
+      .lightbox-close {
+        top: 1rem;
+        right: 1rem;
+      }
+    }
+  </style>
+</body>
+</html>

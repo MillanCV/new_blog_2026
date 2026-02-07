@@ -1,0 +1,15 @@
+---
+import { getAllProjects } from '../../data/projects';
+
+export async function getStaticPaths() {
+  const projects = getAllProjects();
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+
+// Redirect to thumbs page
+return Astro.redirect(`/work/${slug}/thumbs`);
+---

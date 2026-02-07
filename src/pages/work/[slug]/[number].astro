@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Navigation from '../../../components/Navigation.astro';
+import { getAllProjects, getProjectBySlug } from '../../../data/projects';
+
+export async function getStaticPaths() {
+  const projects = getAllProjects();
+  const paths = [];
+
+  for (const project of projects) {
+    for (let i = 0; i < project.images.length; i++) {
+      paths.push({
+        params: {
+          slug: project.slug,
+          number: String(i + 1)
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { slug, number } = Astro.params;
+const project = getProjectBySlug(slug);
+
+if (!project) {
+  return Astro.redirect('/404');
+}
+
+const imageIndex = parseInt(number) - 1;
+const image = project.images[imageIndex];
+
+if (!image) {
+  return Astro.redirect(`/work/${slug}/thumbs`);
+}
+
+const prevNumber = imageIndex > 0 ? imageIndex : null;
+const nextNumber = imageIndex < project.images.length - 1 ? imageIndex + 2 : null;
+---
+
+<BaseLayout title={`${project.title} ${number} - Your Name`}>
+  <Navigation />
+
+  <main class="container">
+    <div class="image-viewer">
+      <div class="image-container">
+        <img src={image.src} alt={image.alt} />
+      </div>
+
+      <div class="image-nav">
+        {prevNumber !== null ? (
+          <a href={`/work/${slug}/${prevNumber + 1}`} class="nav-link">← Previous</a>
+        ) : (
+          <span class="nav-link disabled">← Previous</span>
+        )}
+
+        <a href={`/work/${slug}/thumbs`} class="nav-link">Back to Thumbs</a>
+
+        {nextNumber !== null ? (
+          <a href={`/work/${slug}/${nextNumber}`} class="nav-link">Next →</a>
+        ) : (
+          <span class="nav-link disabled">Next →</span>
+        )}
+      </div>
+
+      <div class="image-info">
+        <p>{project.title} {String(imageIndex + 1).padStart(3, '0')}</p>
+        {image.caption && <p class="caption">{image.caption}</p>}
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: var(--spacing-lg) 0;
+    min-height: 80vh;
+  }
+
+  .image-viewer {
+    max-width: 1200px;
+  }
+
+  .image-container {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .image-nav {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+  }
+
+  .nav-link.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .image-info {
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .caption {
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .image-nav {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    const prevLink = document.querySelector('a[href*="Previous"]')?.closest('a');
+    const nextLink = document.querySelector('a[href*="Next"]')?.closest('a');
+
+    if (e.key === 'ArrowLeft' && prevLink && !prevLink.classList.contains('disabled')) {
+      window.location.href = prevLink.href;
+    } else if (e.key === 'ArrowRight' && nextLink && !nextLink.classList.contains('disabled')) {
+      window.location.href = nextLink.href;
+    }
+  });
+</script>

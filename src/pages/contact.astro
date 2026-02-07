@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+---
+
+<BaseLayout title="Contact - Photography Portfolio">
+  <Navigation />
+
+  <main>
+    <div class="container">
+      <div class="contact-content">
+        <h1>Contact</h1>
+
+        <div class="contact-details">
+          <p class="intro">
+            For inquiries about projects, commissions, prints, or general questions,
+            please get in touch.
+          </p>
+
+          <div class="contact-methods">
+            <div class="contact-item">
+              <h2>Email</h2>
+              <p><a href="mailto:your.email@example.com">your.email@example.com</a></p>
+            </div>
+
+            <div class="contact-item">
+              <h2>Phone</h2>
+              <p>+1 (555) 123-4567</p>
+            </div>
+
+            <div class="contact-item">
+              <h2>Social</h2>
+              <p>
+                <a href="https://instagram.com/yourhandle" target="_blank" rel="noopener">Instagram</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: var(--spacing-xl) 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  .contact-content {
+    max-width: 800px;
+  }
+
+  h1 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .intro {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text);
+  }
+
+  .contact-methods {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .contact-item {
+    padding: 0;
+    border: none;
+  }
+
+  .contact-item h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+    font-weight: 400;
+  }
+
+  .contact-item p {
+    font-size: 0.875rem;
+  }
+
+  .contact-item a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .contact-item a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .intro {
+      font-size: 1rem;
+    }
+  }
+</style>

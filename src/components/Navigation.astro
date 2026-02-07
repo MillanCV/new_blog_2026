@@ -1,0 +1,97 @@
+---
+import { getAllProjects } from '../data/projects';
+
+const projects = getAllProjects();
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="nav">
+  <div class="container">
+    <a href="/" class="nav-logo">YOUR NAME</a>
+
+    <div class="nav-links">
+      <a href="/" class="nav-link">Info</a>
+
+      <div class="nav-group">
+        <span class="nav-label">Personal</span>
+        {projects.filter(p => p.category === 'Personal').map(project => (
+          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+        ))}
+      </div>
+
+      <div class="nav-group">
+        <span class="nav-label">Portraits</span>
+        {projects.filter(p => p.category === 'Portraits').map(project => (
+          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+        ))}
+      </div>
+
+      <div class="nav-group">
+        <span class="nav-label">Commissions</span>
+        {projects.filter(p => p.category === 'Commissions').map(project => (
+          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+        ))}
+      </div>
+
+      <a href="/contact" class="nav-link">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .nav {
+    padding: var(--spacing-md) 0 var(--spacing-lg);
+  }
+
+  .container {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
+  }
+
+  .nav-logo {
+    font-size: 1rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .nav-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text);
+    font-weight: 400;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .nav-links {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+  }
+</style>

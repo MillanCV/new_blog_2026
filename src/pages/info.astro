@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+---
+
+<BaseLayout title="Info - Photography Portfolio">
+  <Navigation />
+
+  <main>
+    <div class="container">
+      <div class="info-content">
+        <h1>Info</h1>
+
+        <section class="bio">
+          <p>
+            Your Name is a photographer based in [City]. Their work focuses on
+            [your photography focus/style]. They have been published in [publications]
+            and have exhibited at [venues].
+          </p>
+
+          <p>
+            [Add more about your background, education, awards, and approach to photography.]
+          </p>
+        </section>
+
+        <section class="clients">
+          <h2>Select Clients & Publications</h2>
+          <ul>
+            <li>New York Magazine</li>
+            <li>National Geographic</li>
+            <li>The New York Times</li>
+            <li>Time Magazine</li>
+          </ul>
+        </section>
+
+        <section class="contact-info">
+          <h2>Contact</h2>
+          <p>
+            Email: <a href="mailto:your.email@example.com">your.email@example.com</a>
+          </p>
+          <p>
+            Instagram: <a href="https://instagram.com/yourhandle" target="_blank" rel="noopener">@yourhandle</a>
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: var(--spacing-xl) 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  .info-content {
+    max-width: 800px;
+  }
+
+  h1 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  section {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--spacing-md);
+  }
+
+  p {
+    line-height: 1.8;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  li:last-child {
+    border-bottom: none;
+  }
+
+  a {
+    color: var(--color-text);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+    }
+  }
+</style>

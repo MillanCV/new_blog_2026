@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Navigation from '../../../components/Navigation.astro';
+import { getAllProjects, getProjectBySlug } from '../../../data/projects';
+
+export async function getStaticPaths() {
+  const projects = getAllProjects();
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const project = getProjectBySlug(slug);
+
+if (!project) {
+  return Astro.redirect('/404');
+}
+---
+
+<BaseLayout title={`${project.title} - Your Name`}>
+  <Navigation />
+
+  <main class="container">
+    <div class="thumbs-grid">
+      {project.images.map((image, index) => (
+        <a href={`/work/${slug}/${index + 1}`} class="thumb-link">
+          {project.title.replace(/\s+/g, '')}
+          {String(index + 1).padStart(3, '0')}
+        </a>
+      ))}
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: var(--spacing-lg) 0;
+    min-height: 80vh;
+  }
+
+  .thumbs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem 1rem;
+    max-width: 800px;
+  }
+
+  .thumb-link {
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .thumbs-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
