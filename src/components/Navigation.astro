@@ -3,37 +3,38 @@ import { getAllProjects } from '../data/projects';
 
 const projects = getAllProjects();
 const currentPath = Astro.url.pathname;
+const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 ---
 
 <nav class="nav">
   <div class="container">
-    <a href="/" class="nav-logo">YOUR NAME</a>
+    <a href={baseUrl + '/'} class="nav-logo">YOUR NAME</a>
 
     <div class="nav-links">
-      <a href="/" class="nav-link">Info</a>
+      <a href={baseUrl + '/'} class="nav-link">Info</a>
 
       <div class="nav-group">
         <span class="nav-label">Personal</span>
         {projects.filter(p => p.category === 'Personal').map(project => (
-          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+          <a href={`${baseUrl}/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
         ))}
       </div>
 
       <div class="nav-group">
         <span class="nav-label">Portraits</span>
         {projects.filter(p => p.category === 'Portraits').map(project => (
-          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+          <a href={`${baseUrl}/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
         ))}
       </div>
 
       <div class="nav-group">
         <span class="nav-label">Commissions</span>
         {projects.filter(p => p.category === 'Commissions').map(project => (
-          <a href={`/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
+          <a href={`${baseUrl}/work/${project.slug}/thumbs`} class="nav-link">{project.title}</a>
         ))}
       </div>
 
-      <a href="/contact" class="nav-link">Contact</a>
+      <a href={`${baseUrl}/contact`} class="nav-link">Contact</a>
     </div>
   </div>
 </nav>

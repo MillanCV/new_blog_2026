@@ -37,6 +37,8 @@ if (!image) {
 
 const prevNumber = imageIndex > 0 ? imageIndex : null;
 const nextNumber = imageIndex < project.images.length - 1 ? imageIndex + 2 : null;
+const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+const imageSrc = baseUrl + (image.src.startsWith('/') ? image.src : '/' + image.src);
 ---
 
 <BaseLayout title={`${project.title} ${number} - Your Name`}>
@@ -45,20 +47,20 @@ const nextNumber = imageIndex < project.images.length - 1 ? imageIndex + 2 : nul
   <main class="container">
     <div class="image-viewer">
       <div class="image-container">
-        <img src={image.src} alt={image.alt} />
+        <img src={imageSrc} alt={image.alt} />
       </div>
 
       <div class="image-nav">
         {prevNumber !== null ? (
-          <a href={`/work/${slug}/${prevNumber + 1}`} class="nav-link">← Previous</a>
+          <a href={`${baseUrl}/work/${slug}/${prevNumber + 1}`} class="nav-link">← Previous</a>
         ) : (
           <span class="nav-link disabled">← Previous</span>
         )}
 
-        <a href={`/work/${slug}/thumbs`} class="nav-link">Back to Thumbs</a>
+        <a href={`${baseUrl}/work/${slug}/thumbs`} class="nav-link">Back to Thumbs</a>
 
         {nextNumber !== null ? (
-          <a href={`/work/${slug}/${nextNumber}`} class="nav-link">Next →</a>
+          <a href={`${baseUrl}/work/${slug}/${nextNumber}`} class="nav-link">Next →</a>
         ) : (
           <span class="nav-link disabled">Next →</span>
         )}

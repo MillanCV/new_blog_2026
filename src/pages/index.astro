@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { getAllProjects } from '../data/projects';
 import { getAllPosts } from '../data/posts';
 
+const baseUrl = typeof import.meta.env !== 'undefined' && import.meta.env.BASE_URL ? import.meta.env.BASE_URL : '/';
 const projects = getAllProjects();
 const posts = getAllPosts();
 const allImages = projects.flatMap(project =>
@@ -105,7 +106,18 @@ const allImages = projects.flatMap(project =>
     </div>
   </div>
 
-  <script define:vars={{ projects, allImages, posts }}>
+  <script define:vars={{ projects, allImages, posts, baseUrl }}>
+    function assetUrl(path) {
+      if (!path || path.startsWith('http')) return path;
+      const b = (typeof baseUrl !== 'undefined' ? baseUrl : '/').replace(/\/$/, '');
+      return b + (path.startsWith('/') ? path : '/' + path);
+    }
+    function withBaseUrl(html) {
+      if (!html) return html;
+      const b = (typeof baseUrl !== 'undefined' ? baseUrl : '/').replace(/\/$/, '');
+      if (b === '' || b === '/') return html;
+      return html.replace(/\s(src|href)="(\/[^"]*)"/g, (_, attr, p) => ` ${attr}="${b}${p}"`);
+    }
     let currentProject = null;
     let currentImageIndex = 0;
     let currentProjectImages = [];
@@ -160,7 +172,7 @@ const allImages = projects.flatMap(project =>
       const post = posts.find((p) => p.slug === slug);
       if (!post) return;
       const inner = document.getElementById('blog-post-inner');
-      inner.innerHTML = `<p class="post-meta">${post.date}</p><h3 class="post-heading">${post.title}</h3><hr class="blog-hr" /><div class="post-body">${post.content}</div>`;
+      inner.innerHTML = `<p class="post-meta">${post.date}</p><h3 class="post-heading">${post.title}</h3><hr class="blog-hr" /><div class="post-body">${withBaseUrl(post.content)}</div>`;
       showContent('blog-post');
     }
 
@@ -200,7 +212,7 @@ const allImages = projects.flatMap(project =>
           const projectCard = document.createElement('div');
           projectCard.className = 'project-card';
           projectCard.innerHTML = `
-            <img src="${project.images[0].src}" alt="${project.title}" />
+            <img src="${assetUrl(project.images[0].src)}" alt="${project.title}" />
             <div class="project-title">${project.title}</div>
           `;
           projectCard.addEventListener('click', () => {
@@ -236,7 +248,7 @@ const allImages = projects.flatMap(project =>
       project.images.forEach((image, index) => {
         const photoItem = document.createElement('div');
         photoItem.className = 'photo-item';
-        photoItem.innerHTML = `<img src="${image.src}" alt="${image.alt}" loading="lazy" />`;
+        photoItem.innerHTML = `<img src="${assetUrl(image.src)}" alt="${image.alt}" loading="lazy" />`;
         photoItem.addEventListener('click', () => openViewer(index));
         grid.appendChild(photoItem);
       });
@@ -267,7 +279,7 @@ const allImages = projects.flatMap(project =>
 
       img.style.display = 'block';
       textDiv.style.display = 'none';
-      img.src = currentProjectImages[index].src;
+      img.src = assetUrl(currentProjectImages[index].src);
       img.alt = currentProjectImages[index].alt;
 
       viewer.style.display = 'flex';
@@ -317,12 +329,12 @@ const allImages = projects.flatMap(project =>
           currentImageIndex = 0;
           img.style.display = 'block';
           textDiv.style.display = 'none';
-          img.src = currentProjectImages[0].src;
+          img.src = assetUrl(currentProjectImages[0].src);
           img.alt = currentProjectImages[0].alt;
         } else if (currentImageIndex < currentProjectImages.length - 1) {
           // Next photo
           currentImageIndex++;
-          img.src = currentProjectImages[currentImageIndex].src;
+          img.src = assetUrl(currentProjectImages[currentImageIndex].src);
           img.alt = currentProjectImages[currentImageIndex].alt;
         }
       } else if (direction === 'prev') {
@@ -332,7 +344,7 @@ const allImages = projects.flatMap(project =>
         } else if (currentImageIndex > 0) {
           // Previous photo
           currentImageIndex--;
-          img.src = currentProjectImages[currentImageIndex].src;
+          img.src = assetUrl(currentProjectImages[currentImageIndex].src);
           img.alt = currentProjectImages[currentImageIndex].alt;
         } else if (currentImageIndex === 0) {
           // From first photo back to about

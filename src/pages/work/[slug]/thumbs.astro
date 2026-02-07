@@ -12,9 +12,10 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const project = getProjectBySlug(slug);
+const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
 if (!project) {
-  return Astro.redirect('/404');
+  return Astro.redirect(baseUrl + '/404');
 }
 ---
 
@@ -24,7 +25,7 @@ if (!project) {
   <main class="container">
     <div class="thumbs-grid">
       {project.images.map((image, index) => (
-        <a href={`/work/${slug}/${index + 1}`} class="thumb-link">
+        <a href={`${baseUrl}/work/${slug}/${index + 1}`} class="thumb-link">
           {project.title.replace(/\s+/g, '')}
           {String(index + 1).padStart(3, '0')}
         </a>
