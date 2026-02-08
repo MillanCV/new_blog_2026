@@ -22,18 +22,22 @@ const allImages = projects.flatMap(project =>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://www.linkedin.com" crossorigin />
   <title>Your Name - Photography Portfolio</title>
 </head>
 <body>
   <div class="layout">
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-content">
         <h1 class="photographer-name">MILLAN CASTRO</h1>
 
         <nav class="projects-nav">
           <div class="nav-section">
             <button type="button" class="nav-link" id="nav-posts">Posts</button>
+            <div class="nav-submenu" id="posts-submenu">
+              <!-- When viewing a post, one submenu-item with post title is inserted by JS -->
+            </div>
           </div>
 
           <div class="nav-section">
@@ -96,10 +100,19 @@ const allImages = projects.flatMap(project =>
       </div>
     </main>
 
+    <!-- Right sidebar: empty, for future nav (e.g. posts / info to photographs) -->
+    <aside class="sidebar sidebar-right" id="sidebar-right">
+      <div class="sidebar-content">
+        <nav class="projects-nav right-nav" aria-label="Secondary">
+          <!-- Empty: add links/buttons as needed -->
+        </nav>
+      </div>
+    </aside>
+
     <!-- Image viewer -->
     <div class="image-viewer" id="image-viewer" style="display: none;">
       <div class="viewer-container" id="viewer-container">
-        <img id="viewer-image" src="" alt="" />
+        <img id="viewer-image" src="" alt="" decoding="async" />
         <div id="viewer-text" class="viewer-text-content" style="display: none;">
           <!-- Text content -->
         </div>
@@ -136,19 +149,47 @@ const allImages = projects.flatMap(project =>
     function showContent(id) {
       hideAllContent();
       const el = document.getElementById(id);
-      if (el) el.style.display = el.id === 'photo-grid' || el.id === 'projects-grid' ? 'grid' : 'block';
+      if (el) {
+        if (el.id === 'photo-grid' || el.id === 'projects-grid') el.style.display = 'grid';
+        else if (el.id === 'about-content' || el.id === 'welcome') el.style.display = 'flex';
+        else el.style.display = 'block';
+      }
       // Menu active state: bold "Posts" when on list or article
       const navPosts = document.getElementById('nav-posts');
       const navAbout = document.getElementById('nav-about');
+      const fotografiaToggle = document.getElementById('fotografia-toggle');
       if (navPosts) navPosts.classList.toggle('active', id === 'blog-list' || id === 'blog-post');
       if (navAbout) navAbout.classList.toggle('active', id === 'about-content');
+      // Fotografía bold only when showing projects grid; dimmed when a project is selected (photo-grid)
+      if (fotografiaToggle) fotografiaToggle.classList.toggle('active', id === 'projects-grid');
+      // Dim name and other menu items when a section is selected
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('has-selection', id !== 'welcome');
+        sidebar.classList.toggle('showing-post', id === 'blog-post');
+      }
+      // Posts submenu: open with current post title when viewing a post, else closed and empty
+      const postsSubmenu = document.getElementById('posts-submenu');
+      if (postsSubmenu) {
+        if (id === 'blog-post') {
+          postsSubmenu.classList.add('open');
+        } else {
+          postsSubmenu.classList.remove('open');
+          postsSubmenu.innerHTML = '';
+        }
+      }
     }
 
-    // Posts: show list
+    // Posts: show list (close posts submenu)
     document.getElementById('nav-posts').addEventListener('click', () => {
       document.getElementById('image-viewer').style.display = 'none';
       document.getElementById('fotografia-submenu').classList.remove('open');
       document.getElementById('fotografia-toggle').classList.remove('active');
+      const postsSubmenu = document.getElementById('posts-submenu');
+      if (postsSubmenu) {
+        postsSubmenu.classList.remove('open');
+        postsSubmenu.innerHTML = '';
+      }
       showContent('blog-list');
       renderBlogList();
     });
@@ -173,7 +214,18 @@ const allImages = projects.flatMap(project =>
       const post = posts.find((p) => p.slug === slug);
       if (!post) return;
       const inner = document.getElementById('blog-post-inner');
-      inner.innerHTML = `<p class="post-meta">${post.date}</p><h3 class="post-heading">${post.title}</h3><hr class="blog-hr" /><div class="post-body">${withBaseUrl(post.content)}</div>`;
+      inner.innerHTML = `<div class="post-body">${withBaseUrl(post.content)}</div><p class="post-meta">${post.date}</p>`;
+      const postsSubmenu = document.getElementById('posts-submenu');
+      if (postsSubmenu) {
+        postsSubmenu.innerHTML = '';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'submenu-item active';
+        btn.disabled = true;
+        btn.setAttribute('aria-current', 'page');
+        btn.textContent = post.title;
+        postsSubmenu.appendChild(btn);
+      }
       showContent('blog-post');
     }
 
@@ -213,7 +265,7 @@ const allImages = projects.flatMap(project =>
           const projectCard = document.createElement('div');
           projectCard.className = 'project-card';
           projectCard.innerHTML = `
-            <img src="${assetUrl(project.images[0].src)}" alt="${project.title}" />
+            <img src="${assetUrl(project.images[0].src)}" alt="${project.title}" loading="lazy" decoding="async" />
             <div class="project-title">${project.title}</div>
           `;
           projectCard.addEventListener('click', () => {
@@ -249,7 +301,7 @@ const allImages = projects.flatMap(project =>
       project.images.forEach((image, index) => {
         const photoItem = document.createElement('div');
         photoItem.className = 'photo-item';
-        photoItem.innerHTML = `<img src="${assetUrl(image.src)}" alt="${image.alt}" loading="lazy" />`;
+        photoItem.innerHTML = `<img src="${assetUrl(image.src)}" alt="${image.alt}" loading="lazy" decoding="async" />`;
         photoItem.addEventListener('click', () => openViewer(index));
         grid.appendChild(photoItem);
       });
@@ -432,43 +484,123 @@ const allImages = projects.flatMap(project =>
     .layout {
       display: flex;
       min-height: 100vh;
+      --top-inset: 3rem;
+      /* Content starts here so first line aligns with "Posts" (3rem + name height + name margin-bottom) */
+      --content-start: 7.25rem;
     }
 
-    /* Sidebar */
+    /* Sidebars: same width, left and right */
     .sidebar {
       width: 280px;
-      background: #ffffff;
-      border-right: none;
+      min-width: 280px;
+      background: #fff;
       position: fixed;
+      top: 0;
       height: 100vh;
       overflow-y: auto;
+      overflow-x: hidden;
       z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
+    .sidebar:first-of-type {
+      left: 0;
+    }
+
+    .sidebar-right {
+      left: auto;
+      right: 0;
+    }
+
+    .sidebar-right .sidebar-content {
+      text-align: right;
+    }
+
+    .sidebar-right .nav-link {
+      text-align: right;
+      justify-content: flex-end;
+    }
+
+    /* MILLAN CASTRO higher up; nav (Posts, etc.) below */
     .sidebar-content {
-      padding: 2rem 1.5rem 2rem 2.25rem;
+      padding-top: var(--top-inset);
+      padding-left: var(--top-inset);
+      padding-right: 1.5rem;
+      padding-bottom: 1.5rem;
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .photographer-name {
       font-size: 1.2rem;
       font-weight: 400;
-      margin-top: -0.5rem;
+      margin-top: 0;
       margin-bottom: 3rem;
       letter-spacing: 0.02em;
       white-space: nowrap;
+      text-align: left;
+    }
+
+    /* Dim inactive menu items when a section is selected (name stays full) */
+    .sidebar.has-selection .nav-link:not(.active) {
+      opacity: 0.4;
+      transition: opacity 0.2s ease, color 0.2s;
+    }
+
+    .sidebar.has-selection .nav-link.active {
+      opacity: 1;
+    }
+
+    .sidebar.has-selection .submenu-item:not(.active) {
+      opacity: 0.4;
+      transition: opacity 0.2s ease, color 0.2s;
+    }
+
+    .sidebar.has-selection .submenu-item.active {
+      opacity: 1;
+    }
+
+    /* When viewing a post: dim everything except the post title in the submenu */
+    .sidebar.showing-post .photographer-name,
+    .sidebar.showing-post .nav-link,
+    .sidebar.showing-post .nav-link.active,
+    .sidebar.showing-post .nav-toggle,
+    .sidebar.showing-post .submenu-item {
+      opacity: 0.4;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar.showing-post .nav-link,
+    .sidebar.showing-post .nav-link.active {
+      font-weight: 400;
+    }
+
+    .sidebar.showing-post #posts-submenu .submenu-item.active {
+      opacity: 1;
+      font-weight: 400;
     }
 
     .projects-nav {
-      margin-bottom: 2rem;
+      margin-bottom: 0;
+      text-align: left;
     }
 
     .nav-section {
       margin-bottom: 0.5rem;
+      text-align: left;
+    }
+
+    .nav-section:last-child {
+      margin-bottom: 0;
     }
 
     .nav-link {
       width: 100%;
       text-align: left;
+      justify-content: flex-start;
       padding: 0.35rem 0;
       background: none;
       border: none;
@@ -478,7 +610,6 @@ const allImages = projects.flatMap(project =>
       transition: color 0.2s;
       font-family: inherit;
       display: flex;
-      justify-content: space-between;
       align-items: center;
     }
 
@@ -503,7 +634,9 @@ const allImages = projects.flatMap(project =>
       overflow: hidden;
       opacity: 0;
       padding-left: 1rem;
+      padding-right: 0;
       margin-top: 0;
+      text-align: left;
       padding-top: 0;
       margin-bottom: 0;
       transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
@@ -544,9 +677,14 @@ const allImages = projects.flatMap(project =>
       font-weight: 500;
     }
 
-    /* Main content: fixed size, inner scrolls = no layout jump */
+    .submenu-item:disabled {
+      cursor: default;
+    }
+
+    /* Main content: centered between left and right sidebars */
     .main-content {
       margin-left: 280px;
+      margin-right: 280px;
       flex: 1;
       min-height: 100vh;
       display: flex;
@@ -557,33 +695,44 @@ const allImages = projects.flatMap(project =>
     .content-inner {
       flex: 1;
       overflow: auto;
-      padding: 3rem;
+      padding: var(--content-start) 3rem 3rem 3rem;
     }
 
     .content-pane {
       max-width: 720px;
-      /* Center on whole page: viewport center 50vw, pane width 720px → left at 50vw - 360px; main-content starts at 280px so from its left: 50vw - 280px - 360px */
-      margin-left: max(0px, calc(50vw - 280px - 360px));
+      margin-left: auto;
       margin-right: auto;
     }
 
-    /* Blog list, article, about: align left + top of first line level with top of "Posts" in sidebar */
     #blog-list.content-pane,
-    #blog-post.content-pane,
-    #about-content.content-pane {
-      margin-left: 0;
+    #blog-post.content-pane {
+      margin-left: auto;
       margin-right: auto;
-      margin-top: 2rem;
+      margin-top: 0;
     }
 
-    /* Grids use full content width so images stay large */
-    #projects-grid.content-pane,
+    #about-content.content-pane {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0;
+      min-height: calc(100vh - 6rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    #projects-grid.content-pane {
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0;
+    }
+
     #photo-grid.content-pane {
-      max-width: none;
-      width: 100%;
-      margin-left: 0;
-      margin-right: 0;
-      margin-top: 2rem;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 0;
     }
 
     .content-heading {
@@ -633,7 +782,7 @@ const allImages = projects.flatMap(project =>
     .post-link {
       width: 100%;
       text-align: left;
-      padding: 0.25rem 0;
+      padding: 0;
       background: none;
       border: none;
       font-size: inherit;
@@ -764,10 +913,14 @@ const allImages = projects.flatMap(project =>
     }
 
     .welcome-message {
-      margin-left: 0;
+      margin-left: max(0px, calc(50vw - 280px - 3rem - 360px));
       margin-right: auto;
-      margin-top: 2rem;
+      margin-top: 0;
       padding: 0;
+      min-height: calc(100vh - 6rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .welcome-message h2 {
@@ -825,7 +978,7 @@ const allImages = projects.flatMap(project =>
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.25rem;
-      padding: 2rem 0;
+      padding: 0;
       max-width: 320px;
       margin-left: auto;
       margin-right: auto;
@@ -1003,26 +1156,51 @@ const allImages = projects.flatMap(project =>
     @media (max-width: 768px) {
       .sidebar {
         width: 100%;
+        min-width: 0;
         position: relative;
         height: auto;
       }
 
+      .sidebar-right {
+        display: none;
+      }
+
       .main-content {
         margin-left: 0;
+        margin-right: 0;
+      }
+
+      .content-inner {
         padding: 2rem 1rem;
       }
 
-      /* Center 720px pane on full page when sidebar is on top (about, welcome) */
       .content-pane {
-        margin-left: max(0px, calc(50vw - 360px));
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .welcome-message {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      #about-content.content-pane {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 0;
+      }
+
+      #projects-grid.content-pane,
+      #photo-grid.content-pane {
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 2rem;
       }
 
       #blog-list.content-pane,
-      #blog-post.content-pane,
-      #about-content.content-pane,
-      #projects-grid.content-pane,
-      #photo-grid.content-pane {
-        margin-left: 0;
+      #blog-post.content-pane {
+        margin-left: auto;
+        margin-right: auto;
         margin-top: 2rem;
       }
 
